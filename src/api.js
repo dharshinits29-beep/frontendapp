@@ -1,0 +1,74 @@
+import axios from "axios";
+const BASE_URL = "http://localhost:5005";
+
+export const getUserByUsername = async (username) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/users/${username}`);
+    return res.data; 
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    return null;
+  }
+};
+
+export const registerUser = async (user) => {
+  try {
+    const res = await axios.post(`${BASE_URL}/register`, user);
+    return res.data;
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    return false;
+  }
+};
+export const addDashboardUser = async (user) => {
+  try{
+    const res=await axios.post(`${BASE_URL}/add-user`,user);
+    return res.data;
+  }catch(err){
+    console.log(err.response?.data || err.message);
+    return false;
+  }
+};
+
+export const loginUser = async (username, password, email) => {
+  try {
+    const res = await axios.post(`${BASE_URL}/login`, { username, password, email });
+    return res.data;
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    return null;
+  }
+};
+
+
+export const updateUser = async (oldUsername, username, email) => {
+  try {
+    const res = await axios.put(`${BASE_URL}/users/${oldUsername}`, { newUsername:username, newEmail:email });
+    return res.data;
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    return null;
+  }
+};
+
+export const deleteUser = async (username) => {
+  try {
+    const res = await axios.delete(`${BASE_URL}/users/${username}`);
+    return res.data;
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    return null;
+  }
+};
+
+export const getDashboardUsers = async (page = 1, limit = 5) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/dashboard/add-users`, {
+      params: { page, limit }
+    });
+    return res.data;  
+  } catch (err) {
+    return { error: err.response?.data?.message || "Something went wrong" };
+  }
+};
+
