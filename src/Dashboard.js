@@ -2,27 +2,25 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { validateField } from "./comfunc";
-import { getUserByUsername, updateUser, deleteUser ,addDashboardUser} from "./api";
+import { getDashboardUsers, addDashboardUser, updateUser, deleteUser } from "./api";
+
 
 const Dashboard = ({ setToken }) => {
   const [user, setUser] = useState(null);
   const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPass: ""
-  });
+  const [newUser, setNewUser] = useState({ username: "", email: "", password: "", confirmPass: "" });
   const [error, setError] = useState({});
-  const [isEditing, setIsEditing] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [editData, setEditData] = useState({ username: "", email: "" });
 
-  const [addedUsers, setAddedUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const limit = 5;
 
   const navigate = useNavigate();
 
+  // Load logged-in user
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -31,15 +29,32 @@ const Dashboard = ({ setToken }) => {
     }
     try {
       const decoded = jwtDecode(token);
-      setUser({ username: decoded.username, email: decoded.email });
+      const currentUser = { username: decoded.username, email: decoded.email };
+      setUser(currentUser);
+      setAllUsers([currentUser]);
     } catch {
       navigate("/login");
     }
   }, [navigate]);
 
+  // Fetch users for pagination (excluding first logged-in user)
+  const fetchAddedUsers = async (page = 1) => {
+    const data = await getDashboardUsers(page, limit);
+    if (!data.error) {
+      setAllUsers([user, ...data.users]);
+      setTotalPages(data.totalPages);
+    } else {
+      setAllUsers([user]);
+      setTotalPages(1);
+    }
+  };
+
+  useEffect(() => {
+    if (user) fetchAddedUsers(currentPage);
+  }, [currentPage, user]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("isLogged");
     setToken(null);
     navigate("/login");
   };
@@ -66,18 +81,11 @@ const Dashboard = ({ setToken }) => {
     setError(allErrors);
 
     if (Object.keys(allErrors).length === 0) {
-      const existingUser = await getUserByUsername(newUser.username);
-      if (existingUser) {
-        alert("Username already exists");
-        return;
-      }
       const success = await addDashboardUser(newUser);
       if (success) {
         alert("User added successfully");
-        setShowAddUser(false);
-        setNewUser({ username: "", email: "", password: "", confirmPass: "" });
-        setError({});
-        setAddedUsers((prev) => [...prev, { username: newUser.username, email: newUser.email }]);
+        handleCancel();
+        fetchAddedUsers(currentPage);
       } else {
         alert("Failed to add user");
       }
@@ -86,9 +94,9 @@ const Dashboard = ({ setToken }) => {
     }
   };
 
-  const handleEdit = () => {
-    setEditData({ username: user.username, email: user.email });
-    setIsEditing(true);
+  const startEditing = (u) => {
+    setEditingUser(u.username);
+    setEditData({ username: u.username, email: u.email });
   };
 
   const handleEditChange = (e) => {
@@ -97,41 +105,32 @@ const Dashboard = ({ setToken }) => {
   };
 
   const handleUpdate = async () => {
-    try {
-      const data = await updateUser(user.username, editData.username, editData.email);
-      if (data) {
-        alert("User updated successfully");
-        setUser({ username: data.user.username, email: data.user.email });
-        setIsEditing(false);
-      } else {
-        alert("Update failed");
-      }
-    } catch (err) {
+    const data = await updateUser(editingUser, editData.username, editData.email);
+    if (data) {
+      alert("User updated successfully");
+      fetchAddedUsers(currentPage);
+      if (editingUser === user.username) setUser({ username: data.user.username, email: data.user.email });
+      setEditingUser(null);
+    } else {
       alert("Update failed");
-      console.log(err.message);
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      const data = await deleteUser(user.username);
-      if (data) {
-        alert("User deleted successfully");
+  const handleDelete = async (usernameToDelete) => {
+    if (!window.confirm("Are you sure to delete this user?")) return;
+    const data = await deleteUser(usernameToDelete);
+    if (data) {
+      alert("User deleted successfully");
+      fetchAddedUsers(currentPage);
+      if (usernameToDelete === user.username) {
         setUser(null);
-      } else {
-        alert("Delete failed");
+        setToken(null);
+        navigate("/login");
       }
-    } catch (err) {
+    } else {
       alert("Delete failed");
-      console.log(err.message);
     }
   };
-
-  const allUsers = user ? [user, ...addedUsers] : [...addedUsers];
-  const indexOfLastUser = currentPage * limit;
-  const indexOfFirstUser = indexOfLastUser - limit;
-  const currentUsers = allUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(allUsers.length / limit);
 
   const handlePageChange = (page) => setCurrentPage(page);
 
@@ -148,8 +147,8 @@ const Dashboard = ({ setToken }) => {
       .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       .dashboard-table th, .dashboard-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
       .dashboard-table th { background-color: #f2f2f2; }
-      .edit-btn, .delete-btn, .save-btn { padding: 6px 12px; border: none; border-radius: 4px; color: white; cursor: pointer; }
-      .edit-btn { background-color: #007bff; margin-right: 5px; }
+      .edit-btn, .delete-btn, .save-btn { padding: 6px 12px; border: none; border-radius: 4px; color: white; cursor: pointer; margin: 2px; }
+      .edit-btn { background-color: #007bff; }
       .edit-btn:hover { background-color: #0056b3; }
       .delete-btn { background-color: #dc3545; }
       .delete-btn:hover { background-color: #b52a38; }
@@ -192,60 +191,38 @@ const Dashboard = ({ setToken }) => {
           </tr>
         </thead>
         <tbody>
-          {currentUsers.length > 0 ? (
-            currentUsers.map((u, idx) => (
-              <tr key={idx}>
-                <td>
-                  {isEditing && u.username === user?.username ? (
-                    <input
-                      type="text"
-                      name="username"
-                      value={editData.username}
-                      onChange={handleEditChange}
-                    />
-                  ) : (
-                    u.username
-                  )}
-                </td>
-                <td>
-                  {isEditing && u.username === user?.username ? (
-                    <input
-                      type="email"
-                      name="email"
-                      value={editData.email}
-                      onChange={handleEditChange}
-                    />
-                  ) : (
-                    u.email
-                  )}
-                </td>
-                <td>
-                  {u.username === user?.username ? (
-                    isEditing ? (
-                      <button className="save-btn" onClick={handleUpdate}>Update</button>
-                    ) : (
-                      <>
-                        <button className="edit-btn" onClick={handleEdit}>Edit</button>
-                        <button className="delete-btn" onClick={handleDelete}>Delete</button>
-                      </>
-                    )
-                  ) : (
-                    "—"
-                  )}
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="3" style={{ textAlign: "center", fontWeight: "bold" }}>
-                No users exist
+          {allUsers.map((u) => (
+            <tr key={u.username}>
+              <td>
+                {editingUser === u.username ? (
+                  <input name="username" value={editData.username} onChange={handleEditChange} />
+                ) : (
+                  u.username
+                )}
+              </td>
+              <td>
+                {editingUser === u.username ? (
+                  <input name="email" value={editData.email} onChange={handleEditChange} />
+                ) : (
+                  u.email
+                )}
+              </td>
+              <td>
+                {editingUser === u.username ? (
+                  <button className="save-btn" onClick={handleUpdate}>Save</button>
+                ) : (
+                  <>
+                    <button className="edit-btn" onClick={() => startEditing(u)}>Edit</button>
+                    <button className="delete-btn" onClick={() => handleDelete(u.username)}>Delete</button>
+                  </>
+                )}
               </td>
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
 
-      {allUsers.length >= 6 && (
+      {totalPages > 1 && (
         <div className="pagination">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
@@ -297,7 +274,7 @@ const Dashboard = ({ setToken }) => {
             </table>
             <div className="modal-buttons">
               <button className="save-btn" onClick={handleSave}>Save</button>
-              <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
+              <button className="delete-btn" onClick={handleCancel}>Cancel</button>
             </div>
           </div>
         </div>

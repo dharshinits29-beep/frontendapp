@@ -63,9 +63,11 @@ export const deleteUser = async (username) => {
 
 export const getDashboardUsers = async (page = 1, limit = 5) => {
   try {
+    
     const res = await axios.get(`${BASE_URL}/dashboard/add-users`, {
       params: { page, limit }
     });
+
     return res.data;  
   } catch (err) {
     return { error: err.response?.data?.message || "Something went wrong" };
