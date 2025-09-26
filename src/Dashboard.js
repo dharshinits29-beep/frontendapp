@@ -20,7 +20,7 @@ const Dashboard = ({ setToken }) => {
 
   const navigate = useNavigate();
 
-  // Load logged-in user
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -37,7 +37,6 @@ const Dashboard = ({ setToken }) => {
     }
   }, [navigate]);
 
-  // Fetch users for pagination (excluding first logged-in user)
   const fetchAddedUsers = async (page = 1) => {
     const data = await getDashboardUsers(page, limit);
     if (!data.error) {
