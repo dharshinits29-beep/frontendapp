@@ -191,7 +191,7 @@ const Dashboard = ({ setToken }) => {
         </thead>
         <tbody>
           {allUsers.map((u) => (
-            <tr key={u.username}>
+            <tr key={u.id}>
               <td>
                 {editingUser === u.username ? (
                   <input name="username" value={editData.username} onChange={handleEditChange} />

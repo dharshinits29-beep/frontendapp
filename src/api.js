@@ -1,5 +1,5 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:5005";
+const BASE_URL = "http://localhost:5001";
 
 export const getUserByUsername = async (username) => {
   try {
@@ -22,7 +22,7 @@ export const registerUser = async (user) => {
 };
 export const addDashboardUser = async (user) => {
   try{
-    const res=await axios.post(`${BASE_URL}/add-user`,user);
+    const res=await axios.post(`${BASE_URL}/dashboard/add-user`,user);
     return res.data;
   }catch(err){
     console.log(err.response?.data || err.message);
