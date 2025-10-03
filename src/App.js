@@ -3,6 +3,7 @@ import { useState } from "react";
 import RegistrationForm from "./RegistrationForm";
 import LoginForm from "./LoginForm";
 import Dashboard from "./Dashboard";
+import Profile from "./profile";
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -14,7 +15,9 @@ const App = () => {
           <Route path="/" element={<Navigate to="/register" />} />
           <Route path="/register"element={token ? <Navigate to="/dashboard" /> : <RegistrationForm /> } />
           <Route path="/login"  element={token ? <Navigate to="/dashboard" /> : <LoginForm setToken={setToken} />} />
-          <Route  path="/dashboard" element={token ? <Dashboard setToken={setToken} /> : <Navigate to="/login" />}  />
+          <Route path="/dashboard" element={token ? <Dashboard setToken={setToken} /> : <Navigate to="/login" />}  />
+          <Route path="/profile" element={token ? <Profile /> : <Navigate to="/login" />}/>
+
           <Route path="*" element={<Navigate to="/register" />} />
         </Routes>
       </div>

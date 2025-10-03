@@ -20,7 +20,7 @@ const Dashboard = ({ setToken }) => {
 
   const navigate = useNavigate();
 
-
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -29,18 +29,29 @@ const Dashboard = ({ setToken }) => {
     }
     try {
       const decoded = jwtDecode(token);
-      const currentUser = { username: decoded.username, email: decoded.email };
+      const currentUser = { id: decoded.id, username: decoded.username, email: decoded.email };
       setUser(currentUser);
-      setAllUsers([currentUser]);
     } catch {
       navigate("/login");
     }
   }, [navigate]);
 
+  
   const fetchAddedUsers = async (page = 1) => {
+    if (!user) return;
+
     const data = await getDashboardUsers(page, limit);
+
     if (!data.error) {
-      setAllUsers([user, ...data.users]);
+      const usersFromBackend = data.users || [];
+
+      
+      const otherUsers = usersFromBackend.filter(u => u.username !== user.username);
+
+      
+      const mergedUsers = [user, ...otherUsers];
+
+      setAllUsers(mergedUsers);
       setTotalPages(data.totalPages);
     } else {
       setAllUsers([user]);
@@ -49,7 +60,7 @@ const Dashboard = ({ setToken }) => {
   };
 
   useEffect(() => {
-    if (user) fetchAddedUsers(currentPage);
+    fetchAddedUsers(currentPage);
   }, [currentPage, user]);
 
   const handleLogout = () => {
@@ -67,14 +78,14 @@ const Dashboard = ({ setToken }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewUser((prev) => ({ ...prev, [name]: value }));
+    setNewUser(prev => ({ ...prev, [name]: value }));
     const fieldError = validateField(name, value, { ...newUser, [name]: value });
-    setError((prev) => ({ ...prev, ...fieldError }));
+    setError(prev => ({ ...prev, ...fieldError }));
   };
 
   const handleSave = async () => {
     let allErrors = {};
-    Object.keys(newUser).forEach((field) => {
+    Object.keys(newUser).forEach(field => {
       allErrors = { ...allErrors, ...validateField(field, newUser[field], newUser) };
     });
     setError(allErrors);
@@ -100,7 +111,7 @@ const Dashboard = ({ setToken }) => {
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setEditData((prev) => ({ ...prev, [name]: value }));
+    setEditData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleUpdate = async () => {
@@ -134,15 +145,17 @@ const Dashboard = ({ setToken }) => {
   const handlePageChange = (page) => setCurrentPage(page);
 
   const styles = (
-    <style>{`
+     <style>{`
       .dashboard { max-width: 800px; margin: 40px auto; font-family: Arial, sans-serif; }
       .dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
       .dashboard-header-right { display: flex; flex-direction: column; align-items: flex-end; }
-      .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
+      .button-group { display: flex; gap: 8px; margin-top: 5px; }
       .logout-btn { background-color: #dc3545; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
       .logout-btn:hover { background-color: #b52a38; }
       .add-user-btn { background-color: #28a745; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
       .add-user-btn:hover { background-color: #218838; }
+      .edit-profile-btn { background-color: #007bff; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
+      .edit-profile-btn:hover { background-color: #0056b3; }
       .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       .dashboard-table th, .dashboard-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
       .dashboard-table th { background-color: #f2f2f2; }
@@ -176,6 +189,7 @@ const Dashboard = ({ setToken }) => {
           <div className="button-group">
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
             <button className="add-user-btn" onClick={handleAddUser}>Add User</button>
+            <button className="edit-profile-btn" onClick={()=>navigate("/profile")}>Edit Profile</button>
           </div>
         </div>
       </header>
@@ -190,8 +204,8 @@ const Dashboard = ({ setToken }) => {
           </tr>
         </thead>
         <tbody>
-          {allUsers.map((u) => (
-            <tr key={u.id}>
+          {allUsers.map((u, index) => (
+            <tr key={u.id || u.username || index}>
               <td>
                 {editingUser === u.username ? (
                   <input name="username" value={editData.username} onChange={handleEditChange} />
