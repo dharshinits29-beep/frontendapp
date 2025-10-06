@@ -156,6 +156,8 @@ const Dashboard = ({ setToken }) => {
       .add-user-btn:hover { background-color: #218838; }
       .edit-profile-btn { background-color: #007bff; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
       .edit-profile-btn:hover { background-color: #0056b3; }
+      .reset-password-btn {background-color: #ffc107; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
+      .reset-password-btn:hover { background-color: #e0a800; }
       .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       .dashboard-table th, .dashboard-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
       .dashboard-table th { background-color: #f2f2f2; }
@@ -190,6 +192,7 @@ const Dashboard = ({ setToken }) => {
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
             <button className="add-user-btn" onClick={handleAddUser}>Add User</button>
             <button className="edit-profile-btn" onClick={()=>navigate("/profile")}>Edit Profile</button>
+            <button className="reset-password-btn" onClick={()=>navigate("/resetpass")}>Reset password</button>
           </div>
         </div>
       </header>

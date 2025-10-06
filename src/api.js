@@ -111,3 +111,21 @@ export const getProfile = async () => {
     return null;
   }
 };
+
+export const changePassword = async (oldPassword,newPassword) =>{
+  try{
+    const token = localStorage.getItem("token");
+    const res = await axios.put(`${BASE_URL}/change-password`,{oldPassword,newPassword},
+      {
+        headers:{
+          authentication:token,
+        },
+      }
+    );
+    return res.data;
+  }catch(err){
+    console.log(err.response?.data || err.message);
+    return null;
+  }
+
+}

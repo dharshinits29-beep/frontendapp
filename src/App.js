@@ -4,6 +4,7 @@ import RegistrationForm from "./RegistrationForm";
 import LoginForm from "./LoginForm";
 import Dashboard from "./Dashboard";
 import Profile from "./profile";
+import Resetpass from "./resetpass";
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -17,7 +18,7 @@ const App = () => {
           <Route path="/login"  element={token ? <Navigate to="/dashboard" /> : <LoginForm setToken={setToken} />} />
           <Route path="/dashboard" element={token ? <Dashboard setToken={setToken} /> : <Navigate to="/login" />}  />
           <Route path="/profile" element={token ? <Profile /> : <Navigate to="/login" />}/>
-
+          <Route path="/resetpass" element={token ? <Resetpass /> : <Navigate to ="/login"/>}/>
           <Route path="*" element={<Navigate to="/register" />} />
         </Routes>
       </div>
