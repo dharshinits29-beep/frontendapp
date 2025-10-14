@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { validateField } from "./comfunc";
+import Header from "./header";
 import { getDashboardUsers, addDashboardUser, updateUser, deleteUser } from "./api";
 
 
@@ -44,15 +45,11 @@ const Dashboard = ({ setToken }) => {
 
     if (!data.error) {
       const usersFromBackend = data.users || [];
-
-      
       const otherUsers = usersFromBackend.filter(u => u.username !== user.username);
-
-      
       const mergedUsers = [user, ...otherUsers];
-
       setAllUsers(mergedUsers);
       setTotalPages(data.totalPages);
+      setAllUsers(usersFromBackend);
     } else {
       setAllUsers([user]);
       setTotalPages(1);
@@ -141,6 +138,9 @@ const Dashboard = ({ setToken }) => {
       alert("Delete failed");
     }
   };
+  const handleAddProduct = () => {
+    navigate("/addproduct");
+  }
 
   const handlePageChange = (page) => setCurrentPage(page);
 
@@ -154,6 +154,8 @@ const Dashboard = ({ setToken }) => {
       .logout-btn:hover { background-color: #b52a38; }
       .add-user-btn { background-color: #28a745; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
       .add-user-btn:hover { background-color: #218838; }
+      .add-product-btn {background-color: #17a2b8; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
+      .add-product-btn:hover { background-color: #117a8b; }
       .edit-profile-btn { background-color: #007bff; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
       .edit-profile-btn:hover { background-color: #0056b3; }
       .reset-password-btn {background-color: #ffc107; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
@@ -182,22 +184,22 @@ const Dashboard = ({ setToken }) => {
   );
 
   return (
+    <div>
+      <Header user={user} onLogout={handleLogout} />
     <div className="dashboard">
       {styles}
       <header className="dashboard-header">
         <h1>Dashboard</h1>
         <div className="dashboard-header-right">
-          <span>Welcome {user?.username}</span>
-          <div className="button-group">
-            <button className="logout-btn" onClick={handleLogout}>Logout</button>
-            <button className="add-user-btn" onClick={handleAddUser}>Add User</button>
-            <button className="edit-profile-btn" onClick={()=>navigate("/profile")}>Edit Profile</button>
-            <button className="reset-password-btn" onClick={()=>navigate("/resetpass")}>Reset password</button>
-          </div>
         </div>
       </header>
 
-      <h3 style={{ marginTop: "20px" }}>Users</h3>
+      <div style={{ display : "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h3>Users</h3>
+         <button className="add-user-btn" onClick={handleAddUser}>Add User</button>
+         <button className="add-product-btn" onClick={handleAddProduct}>Add Product</button>
+         </div>
+      
       <table className="dashboard-table">
         <thead>
           <tr>
@@ -208,7 +210,7 @@ const Dashboard = ({ setToken }) => {
         </thead>
         <tbody>
           {allUsers.map((u, index) => (
-            <tr key={u.id || u.username || index}>
+            <tr key={`${u.id || u.username}-${index}`}>
               <td>
                 {editingUser === u.username ? (
                   <input name="username" value={editData.username} onChange={handleEditChange} />
@@ -295,6 +297,7 @@ const Dashboard = ({ setToken }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -1,21 +1,44 @@
-import { useState } from "react";
+import { useEffect,useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "./header";
+import { jwtDecode } from "jwt-decode";
 import { changePassword } from "./api";
 
-const Resetpass = ()=>{
+
+const Resetpass = ({setToken})=>{
     const navigate = useNavigate();
+    const [user,setUser] = useState(null);
     const [oldPassword,setOldPassword] = useState("");
     const [newPassword,setNewPassword] = useState("");
     const [confirmPass,setConfirmpass] = useState("");
     const [error,setError] = useState("");
     const [success,setSuccess] = useState("");
 
+    useEffect(()=>{
+        const token = localStorage.getItem("token");
+        if(token){
+            try{
+                const decoded = jwtDecode(token);
+                setUser({username:decoded.username});
+            }catch(err){
+                console.log("Invalid token",err);
+            }
+        }
+
+    },[]);
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        setToken(null);
+        navigate("/login");
+    }
+
     const handleSubmit = async (e)=>{
         e.preventDefault();
         setError("");
         setSuccess("");
         
-        if(!oldPassword || !newPassword){
+        if(!oldPassword || !newPassword || !confirmPass){
             setError("All field are required");
             return;
         }
@@ -50,6 +73,8 @@ const Resetpass = ()=>{
     `}</style>
   );
   return(
+    <div>
+        <Header user={user} onLogout={handleLogout} />
     <div className="reset-password-container">
         {styles}
         <h2>Reset Password</h2>
@@ -63,8 +88,8 @@ const Resetpass = ()=>{
             <label>Confirm Password</label>
             <input type="password" value={confirmPass} onChange={(e)=>setConfirmpass(e.target.value)}/>
             <button type="submit">Change Password</button>
-            <button type ="button" className="back-btn" onClick={()=>navigate("/dashboard")}>Dashboard</button>
         </form>
+    </div>
     </div>
   );
 };

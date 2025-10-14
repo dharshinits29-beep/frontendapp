@@ -35,16 +35,15 @@ export const addDashboardUser = async (user) => {
   }
 };
 
-export const loginUser = async (username, password, email) => {
+export const loginUser = async (password, email) => {
   try {
-    const res = await axios.post(`${BASE_URL}/login`, { username, password, email });
+    const res = await axios.post(`${BASE_URL}/login`, { password, email });
     return res.data;
   } catch (err) {
     console.log(err.response?.data || err.message);
     return null;
   }
 };
-
 
 export const updateUser = async (oldUsername, username, email) => {
   try {
@@ -127,5 +126,51 @@ export const changePassword = async (oldPassword,newPassword) =>{
     console.log(err.response?.data || err.message);
     return null;
   }
-
 }
+
+export const postProduct = async (productData) => {
+  try {
+    const formData = new FormData();
+    formData.append("productName", productData.productName);
+    formData.append("price", productData.price);
+    formData.append("description", productData.description);
+    formData.append("productCategory", productData.productCategory);
+    formData.append("tags", JSON.stringify(productData.tags)); 
+
+    if (productData.productImage && productData.productImage.length > 0) {
+      productData.productImage.forEach((file) => {
+        formData.append("productImage", file);
+      });
+    }
+
+    const res = await axios.post(`${BASE_URL}/products`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return res.data
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    return null;
+  }
+};
+export const getProduct = async ({ page, limit }) => {
+  try {
+    
+    const res = await axios.get(`${BASE_URL}/addproduct`, {
+      params: { page, limit },
+    });
+
+
+    if (res.data && Array.isArray(res.data.products)) {
+      return res.data;
+    } else {
+      console.error("Unexpected response format:", res.data);
+      return { products: [], totalPage: 1 };
+    }
+  } catch (err) {
+    console.error("Error fetching products:", err.response?.data || err.message);
+    return { products: [], totalPage: 1 }; 
+  }
+};
+
+

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import Header from "./header";
 import { useNavigate } from "react-router-dom";
 import { getProfile, updateProfile } from "./api"; 
 
-const Profile = () => {
+const Profile = ({setToken}) => {
   const [user, setUser] = useState({
     username: "",
     email: "",
@@ -57,9 +58,11 @@ const Profile = () => {
     }
   };
 
-  const handleBackToDashboard = () => {
-    navigate("/dashboard");
-  };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    navigate("/login");
+  }
 
   const styles = {
     container: {
@@ -104,6 +107,9 @@ const Profile = () => {
   };
 
   return (
+    <div>
+      <Header user={user} onLogout={handleLogout} />
+    
     <div style={styles.container}>
       <h2 style={styles.title}>My Profile</h2>
 
@@ -145,9 +151,7 @@ const Profile = () => {
         Update Profile
       </button>
 
-      <button onClick={handleBackToDashboard} style={styles.button}>
-        Dashboard
-      </button>
+    </div>
     </div>
   );
 };

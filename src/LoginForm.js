@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "./api";
 
 const LoginForm = ({setToken}) => {
-  const [formData, setFormData] = useState({ username: "", password: "",email: "" });
+  const [formData, setFormData] = useState({ password: "",email: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate(); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));  
   };
 
   const handleSubmit = async (e) => {
@@ -17,21 +17,21 @@ const LoginForm = ({setToken}) => {
     setError("");
     
 
-    if (!formData.username || !formData.password || !formData.email) {
+    if (!formData.password || !formData.email) {
       setError("Please fill all fields.");
       return;
     }
-    const result = await loginUser(formData.username,formData.password,formData.email);
+    const result = await loginUser(formData.password,formData.email);
     console.log("RESULT",result);
     if(!result){
-      setError("Invalid username,password and email");
+      setError("Invalid password and email");
       return;
     }
     localStorage.setItem("token",result.token);
     setToken(result.token);
     alert("Login Succesfull");
     localStorage.setItem("isLogged", "true");
-    navigate("/dashboard");
+    navigate("/home");
   };
 
   return (
@@ -48,19 +48,6 @@ const LoginForm = ({setToken}) => {
       }}
     >
       <h2>Login</h2>
-
-      <div style={{ marginBottom: "15px" }}>
-        <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold", fontSize: "14px" }}>
-          Username:
-        </label>
-        <input
-          type="text"
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
-          style={{ width: "100%", padding: "8px", fontSize: "14px", borderRadius: "4px", border: "1px solid #ccc" }}
-        />
-      </div>
 
       <div style={{ marginBottom: "15px" }}>
         <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold", fontSize: "14px" }}>
