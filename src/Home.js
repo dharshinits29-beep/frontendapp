@@ -6,9 +6,15 @@ const Home = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState([]);
   const [page, setPage] = useState(1);
+  const [exDescription,setExDescription] = useState({});
   const [totalPage, setTotalPage] = useState();
   const [currentImageIndex, setCurrentImageIndex] = useState({});
   const limit = 10;
+
+  const toggleDescription = (id)=>{
+    setExDescription((prev)=>({...prev,[id]:!prev[id],
+    }));
+  }
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,6 +42,7 @@ const Home = () => {
     console.error(err);
   }
 };
+
 
   const handleAddProduct=()=>{
     navigate("/addproduct")
@@ -177,16 +184,18 @@ const Home = () => {
               </div>
               <div style={styles.line}>
                 <span style={styles.label}>Price: </span>
-                <span style={styles.value}>₹{item.price}</span>
+                <span style={styles.value}>₹{Number(item.price).toLocaleString('en-IN')}</span>
               </div>
               <div style={styles.line}>
                 <span style={styles.label}>Description: </span>
-                <span
-                  style={styles.value}
-                  dangerouslySetInnerHTML={{ __html: item.description }}
-                />
-              </div>
-              <div style={styles.line}>
+                <span style={styles.value}>
+                  {item.description.length > 500 ? (<>
+                  <span dangerouslySetInnerHTML={{__html:exDescription[item.id]?item.description:item.description.slice(0,500)+"...", }}/>
+                  <span style={{ color: "blue", cursor: "pointer", marginLeft: "5px" }}
+                  onClick={()=>toggleDescription(item.id)}>
+                    {exDescription[item.id]?"See less":"See more"}</span></>):(
+                      <span dangerouslySetInnerHTML={{__html:item.description,}}/>)}</span></div>
+              <div style={styles.line}> 
                 <span style={styles.label}>Tags: </span>
                 <span style={styles.value}>
                   {Array.isArray(item.tags) ? item.tags.join(", ") : item.tags}
