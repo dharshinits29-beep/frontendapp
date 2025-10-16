@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProduct } from "./api";
+import { getProduct,addLikes } from "./api";
+import { jwtDecode } from "jwt-decode";
+
 
 const Home = () => {
   const navigate = useNavigate();
+  const [userId,setUserId]=useState(null);
   const [product, setProduct] = useState([]);
   const [page, setPage] = useState(1);
   const [exDescription,setExDescription] = useState({});
@@ -15,11 +18,22 @@ const Home = () => {
     setExDescription((prev)=>({...prev,[id]:!prev[id],
     }));
   }
-
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) navigate("/login");
-  }, [navigate]);
+    if (!token) {
+      navigate("/login");
+    return;
+  }
+  try{
+    const decoded = jwtDecode(token);
+    setUserId(decoded.id);
+  }catch(err){
+    console.error("Invalid token:",err);
+    navigate("/login");
+  }
+},[navigate]);
+
 
   useEffect(() => {
     fetchProducts(page);
@@ -42,7 +56,6 @@ const Home = () => {
     console.error(err);
   }
 };
-
 
   const handleAddProduct=()=>{
     navigate("/addproduct")
@@ -71,6 +84,26 @@ const Home = () => {
       ...prev,[id]: prev[id] > 0 ? prev[id] - 1 : count - 1,
     }));
   };
+
+ const handleLike = async (productId) => {
+
+  if (!userId || !productId) {
+    console.log("Missing userid or productid",{userId,productId});
+    return; 
+  }
+
+  try {
+    const res = await addLikes({ userid: userId, id: productId });
+
+    setProduct((prev) =>
+      prev.map((item) =>
+        item.id === productId ? { ...item,likes: res.liked ? (item.likes || 0) + 1 : Math.max((item.likes || 1) - 1, 0), isLiked: res.liked,}: item
+      )
+    );
+  } catch (err) {
+    console.error("Error updating like:", err);
+  }
+};
 
   const styles = {
     homeContainer: {
@@ -137,6 +170,15 @@ const Home = () => {
     },
     value: {
       color: "#555",
+    },
+     likeButton: {
+      marginTop: "10px",
+      padding: "5px 10px",
+      backgroundColor: "#007bff",
+      color: "#fff",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
     },
   };
 
@@ -205,6 +247,8 @@ const Home = () => {
                 <span style={styles.label}>Category: </span>
                 <span style={styles.value}>{item.productCategory}</span>
               </div>
+              <button style={{...styles.likeButton,backgroundColor:item.isLiked ? "green" : "blue"}}
+              onClick={()=>handleLike(item.id)}>{item.isLiked? "Liked": "Like"}({item.likes || 0})</button>
             </div>
           </div>
         );

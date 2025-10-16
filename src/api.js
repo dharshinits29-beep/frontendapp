@@ -173,4 +173,14 @@ export const getProduct = async ({ page, limit }) => {
   }
 };
 
+export const addLikes = async({userid,id})=>{
+  try{
+    const res = await axios.put(`${BASE_URL}/products/${id}/likes`,{userid:userid});
+    return res.data;
+  }catch(err){
+    console.error("Error adding likes:",err);
+    throw err;
+  }
+};
+
 
